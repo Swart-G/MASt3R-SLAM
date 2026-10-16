@@ -9,5 +9,5 @@ dynamic = ["dependencies"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["mast3r", "dust3r"]
+include = ["mast3r*"]
 namespaces = false

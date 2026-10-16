@@ -1,0 +1,31 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        TORCH_CUDA_ARCH_LIST: ${TORCH_CUDA_ARCH_LIST:-8.0;8.6;8.9;9.0;12.0+PTX}
+    # Linux host networking lets Android reach the same LAN address as the QR code.
+    network_mode: host
+    user: "${MAST3R_UID:-1000}:${MAST3R_GID:-1000}"
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 120s
+    shm_size: 8gb
+    environment:
+      MAST3R_SLAM_PROJECTS: /app/projects
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    volumes:
+      - ./projects:/app/projects
+      - ./checkpoints:/app/checkpoints:ro
+      - ./config:/app/config:ro
+    command: ["python", "-m", "mast3r_slam.cli", "web", "--host", "127.0.0.1", "--port", "${MAST3R_WEB_PORT:-8080}", "--phone-port", "${MAST3R_PHONE_PORT:-8765}"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${MAST3R_WEB_PORT:-8080}/health', timeout=3)"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

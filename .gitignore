@@ -138,3 +138,21 @@ screen.yaml
 *.pt
 *.ini
 notebooks/*
+
+# Local browser verification artifacts
+.playwright-cli/
+output/playwright/
+
+# Reconstructed scenes stay local; keep the bind-mount directory in Git.
+/projects/*
+!/projects/.gitkeep
+
+# Android build caches and machine-local settings
+android-app/.gradle/
+android-app/.kotlin/
+android-app/local.properties
+
+# Local reconstructions and generated release bundles
+/*.ply
+/releases/*
+!/releases/README.md

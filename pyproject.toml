@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "MAST3R-SLAM"
 version = "0.0.1"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "numpy==1.26.4",
     "einops",
@@ -12,11 +13,28 @@ dependencies = [
     "evo",
     "natsort",
     # "torchcodec==0.1",
-    "lietorch @ git+https://github.com/princeton-vl/lietorch.git",
+    "lietorch @ https://github.com/princeton-vl/lietorch/archive/e7df86554156b36846008d8ddbcc4d8521a16554.zip",
     "plyfile",
+    "protobuf>=7.35,<8",
+    "aiohttp>=3.10,<4",
+    "zstandard>=0.23,<1",
+    "zeroconf>=0.140,<1",
+    "qrcode>=8,<9",
+    "Pillow>=10,<13",
+    "textual>=1,<2",
 ]
+
+[project.optional-dependencies]
+viewer = ["open3d>=0.19,<1"]
+test = ["pytest>=8,<9"]
+
+[project.scripts]
+mast3r-slam = "mast3r_slam.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["mast3r_slam"]
+include = ["mast3r_slam*", "protocol*"]
 namespaces = false
+
+[tool.setuptools.package-data]
+"mast3r_slam.web" = ["static/*", "static/vendor/*"]

@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+package mast3r.slam.v1;
+
+option java_package = "org.mast3r.slam.protocol";
+option java_multiple_files = true;
+
+enum SessionPhase {
+  SESSION_PHASE_UNSPECIFIED = 0;
+  PAIRING = 1;
+  READY = 2;
+  SCANNING = 3;
+  PAUSED = 4;
+  AR_PREPARING = 5;
+  AR_VIEW = 6;
+  FINALIZING = 7;
+  SAVED = 8;
+  DISCONNECTED = 9;
+  ERROR = 10;
+}
+
+enum TrackingState {
+  TRACKING_STATE_UNSPECIFIED = 0;
+  INITIALIZING = 1;
+  TRACKING = 2;
+  LOST = 3;
+  RELOCALIZING = 4;
+}
+
+enum CommandType {
+  COMMAND_TYPE_UNSPECIFIED = 0;
+  START = 1;
+  PAUSE = 2;
+  RESUME = 3;
+  ENTER_AR = 4;
+  LEAVE_AR = 5;
+  STOP = 6;
+}
+
+enum ArAlignmentStatus {
+  AR_ALIGNMENT_STATUS_UNSPECIFIED = 0;
+  SEARCHING = 1;
+  ALIGNED = 2;
+  ALIGNMENT_LOST = 3;
+}
+
+message Hello {
+  uint32 protocol_version = 1;
+  string token = 2;
+  string client_name = 3;
+  string device_id = 4;
+  string app_version = 5;
+}
+
+message CameraConfig {
+  string device_model = 1;
+  string physical_camera_id = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  repeated float intrinsics = 5; // fx, fy, cx, cy
+  repeated float distortion = 6;
+  uint32 crop_left = 7;
+  uint32 crop_top = 8;
+  uint32 crop_width = 9;
+  uint32 crop_height = 10;
+}
+
+message FramePacket {
+  uint64 frame_id = 1;
+  uint64 timestamp_ns = 2;
+  uint32 orientation_degrees = 3;
+  string physical_camera_id = 4;
+  uint32 width = 5;
+  uint32 height = 6;
+  uint32 crop_left = 7;
+  uint32 crop_top = 8;
+  uint32 crop_width = 9;
+  uint32 crop_height = 10;
+  repeated float intrinsics = 11;
+  repeated float distortion = 12;
+  bytes jpeg = 13;
+}
+
+message Command {
+  string command_id = 1;
+  CommandType type = 2;
+  string project_id = 3;
+  bool camera_change_confirmed = 4;
+}
+
+message Heartbeat { uint64 monotonic_ns = 1; }
+
+message ArAlignmentFrame {
+  uint64 frame_id = 1;
+  uint64 timestamp_ns = 2;
+  bytes jpeg = 3;
+  repeated float intrinsics = 4; // fx, fy, cx, cy
+  repeated float ar_world_from_camera = 5; // column-major ARCore/OpenGL pose
+  uint32 width = 6;
+  uint32 height = 7;
+}
+
+message ClientMessage {
+  oneof payload {
+    Hello hello = 1;
+    CameraConfig camera_config = 2;
+    FramePacket frame = 3;
+    Command command = 4;
+    Heartbeat heartbeat = 5;
+    ArAlignmentFrame ar_alignment_frame = 6;
+  }
+}
+
+message SessionState {
+  SessionPhase phase = 1;
+  string project_id = 2;
+  uint32 revision = 3;
+  string detail = 4;
+  string command_id = 5;
+}
+
+message FrameAck {
+  uint64 frame_id = 1;
+  bool accepted = 2;
+  uint64 dropped_frames = 3;
+}
+
+message ProcessedPreview {
+  uint64 input_frame_id = 1;
+  uint64 processed_frame_id = 2;
+  TrackingState tracking = 3;
+  uint32 latency_ms = 4;
+  bytes jpeg = 5;
+  string guidance = 6;
+}
+
+message TrackingStatus {
+  TrackingState state = 1;
+  string guidance = 2;
+}
+
+message CloudChunk {
+  uint32 index = 1;
+  uint64 offset = 2;
+  uint64 compressed_size = 3;
+  uint64 uncompressed_size = 4;
+  string sha256 = 5;
+  string url = 6;
+}
+
+message CloudManifest {
+  string snapshot_id = 1;
+  uint64 point_count = 2;
+  repeated float bounds_min = 3;
+  repeated float bounds_max = 4;
+  repeated CloudChunk chunks = 5;
+  string encoding = 6;
+}
+
+message Progress {
+  string operation = 1;
+  float fraction = 2;
+  string detail = 3;
+}
+
+message Error {
+  string code = 1;
+  string message = 2;
+  bool recoverable = 3;
+  string command_id = 4;
+}
+
+message ArAlignmentResult {
+  ArAlignmentStatus status = 1;
+  float quality = 2;
+  repeated float ar_world_from_slam_map = 3; // column-major model matrix
+  string guidance = 4;
+  uint64 frame_id = 5;
+}
+
+message ServerMessage {
+  oneof payload {
+    SessionState session_state = 1;
+    FrameAck frame_ack = 2;
+    ProcessedPreview preview = 3;
+    TrackingStatus tracking_status = 4;
+    CloudManifest cloud_manifest = 5;
+    Progress progress = 6;
+    Error error = 7;
+    ArAlignmentResult ar_alignment_result = 8;
+  }
+}

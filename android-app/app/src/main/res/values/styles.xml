@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Material3.DayNight.NoActionBar" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">#66D9C8</item>
+    </style>
+</resources>

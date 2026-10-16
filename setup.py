@@ -6,7 +6,7 @@ from torch.utils.cpp_extension import BuildExtension, CppExtension
 import os
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-has_cuda = torch.cuda.is_available()
+has_cuda = torch.cuda.is_available() or os.environ.get("FORCE_CUDA") == "1"
 
 include_dirs = [
     os.path.join(ROOT, "mast3r_slam/backend/include"),
@@ -28,12 +28,6 @@ if has_cuda:
     sources.append("mast3r_slam/backend/src/matching_kernels.cu")
     extra_compile_args["nvcc"] = [
         "-O3",
-        "-gencode=arch=compute_60,code=sm_60",
-        "-gencode=arch=compute_61,code=sm_61",
-        "-gencode=arch=compute_70,code=sm_70",
-        "-gencode=arch=compute_75,code=sm_75",
-        "-gencode=arch=compute_80,code=sm_80",
-        "-gencode=arch=compute_86,code=sm_86",
     ]
     ext_modules = [
         CUDAExtension(
